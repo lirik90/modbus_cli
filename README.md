@@ -12,6 +12,25 @@ make -j2
 ## Run
 `./modbus_cli -h`
 
+## Options:
+```
+  -h, --help                    Displays help on commandline options.
+  --help-all                    Displays help including Qt specific options.
+  -a, --address <adr>           Device address.
+  -t, --type <type>             Register type.
+  -r, --read                    Read from device.
+  -w, --write <values>          Write to device. Values comma separated.
+                                Example: 1,2,3
+  --rw, --readwrite <rwvalues>  Write and read device.
+  -s, --start <start>           Start value address.
+  -c, --count <count>           Values read count.
+  --repeat <repeat>             Repeat command. -1 is infinity
+  --timeout <timeout>           Modbus response timeout in milliseconds
+  --raw <raw>                   Write raw data (hex)
+  --func <func>                 Function code for raw request
+  --func_hex <func_hex>         Function code for raw request (hex)
+```
+
 ## Example
 ### Read two holding registers from MTCP
 `./modbus_cli -r -t 4 -a 1 -s 1103 -c 2 mtcp://10.10.2.106:502`
