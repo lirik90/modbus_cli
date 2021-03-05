@@ -1,0 +1,8 @@
+*.user*
+*~
+*.~lock*
+build/
+win/
+.obj/
+.rcc/
+.metadata/
