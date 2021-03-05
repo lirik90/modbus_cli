@@ -1,6 +1,9 @@
 # modbus_cli
 Simple modbus client based on Qt framework
 
+## Install requirements
+`apt install qt5-default libqt5serialbus5-dev`
+
 ## Build:
 ```bash
 git clone https://github.com/lirik90/modbus_cli.git
