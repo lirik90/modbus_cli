@@ -17,21 +17,20 @@ make -j2
 
 ## Options:
 ```
-  -h, --help                    Displays help on commandline options.
-  --help-all                    Displays help including Qt specific options.
-  -a, --address <adr>           Device address.
-  -t, --type <type>             Register type.
-  -r, --read                    Read from device.
-  -w, --write <values>          Write to device. Values comma separated.
-                                Example: 1,2,3
-  --rw, --readwrite <rwvalues>  Write and read device.
-  -s, --start <start>           Start value address.
-  -c, --count <count>           Values read count.
-  --repeat <repeat>             Repeat command. -1 is infinity
-  --timeout <timeout>           Modbus response timeout in milliseconds
-  --raw <raw>                   Write raw data (hex)
-  --func <func>                 Function code for raw request
-  --func_hex <func_hex>         Function code for raw request (hex)
+  -h, --help                  Displays help on commandline options.
+  --help-all                  Displays help including Qt specific options.
+  -a, --address <adr>         Device address. Default: 1
+  -t, --type <type>           Register type. Default: 4 holding_register
+  -r, --read                  Read from device.
+  -w, --write <values>        Write to device. Values comma separated. Example: 1,2,3
+  --rw, --readwrite <values>  Write and read device.
+  -s, --start <start>         Start value address. Default: 0
+  -c, --count <count>         Values read count. Default: 1
+  --repeat <repeat>           Repeat command. -1 is infinity. Default: 0
+  --timeout <timeout>         Modbus response timeout in milliseconds. Default: 1000
+  --raw <raw>                 Write raw data (hex)
+  --func <func>               Function code for raw request
+  --func_hex <func_hex>       Function code for raw request (hex)
 ```
 
 ## Example
@@ -67,3 +66,9 @@ Can use values 5, 6, 7, or 8
 - 0 is NoFlowControl
 - 1 is HardwareControl
 - 2 is SoftwareControl
+
+## Posible register type values
+- 1 or discrete
+- 2 or coils
+- 3 or input_register
+- 4 or holding_register

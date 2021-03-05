@@ -24,15 +24,15 @@ enum Option_Type {
 Worker::Worker(QObject *parent) :
     QObject(parent),
     _opt({
-        { { "a", "address" }, QCoreApplication::translate("main", "Device address."), "adr", "1"},
-        { { "t", "type" }, QCoreApplication::translate("main", "Register type."), "type", "4"},
+        { { "a", "address" }, QCoreApplication::translate("main", "Device address. Default: 1"), "adr", "1"},
+        { { "t", "type" }, QCoreApplication::translate("main", "Register type. Default: 4 holding_register"), "type", "4"},
         { { "r", "read" }, QCoreApplication::translate("main", "Read from device.")},
         { { "w", "write" }, QCoreApplication::translate("main", "Write to device. Values comma separated. Example: 1,2,3"), "values"},
-        { { "rw", "readwrite" }, QCoreApplication::translate("main", "Write and read device."), "rwvalues"},
-        { { "s", "start" }, QCoreApplication::translate("main", "Start value address."), "start", "0"},
-        { { "c", "count" }, QCoreApplication::translate("main", "Values read count."), "count", "1"},
-        { "repeat", QCoreApplication::translate("main", "Repeat command. -1 is infinity"), "repeat", "0"},
-        { "timeout", QCoreApplication::translate("main", "Modbus response timeout in milliseconds"), "timeout", "1000"},
+        { { "rw", "readwrite" }, QCoreApplication::translate("main", "Write and read device."), "values"},
+        { { "s", "start" }, QCoreApplication::translate("main", "Start value address. Default: 0"), "start", "0"},
+        { { "c", "count" }, QCoreApplication::translate("main", "Values read count. Default: 1"), "count", "1"},
+        { "repeat", QCoreApplication::translate("main", "Repeat command. -1 is infinity. Default: 0"), "repeat", "0"},
+        { "timeout", QCoreApplication::translate("main", "Modbus response timeout in milliseconds. Default: 1000"), "timeout", "1000"},
         { "raw", QCoreApplication::translate("main", "Write raw data (hex)"), "raw"},
         { "func", QCoreApplication::translate("main", "Function code for raw request"), "func"},
         { "func_hex", QCoreApplication::translate("main", "Function code for raw request (hex)"), "func_hex"}
@@ -42,17 +42,17 @@ Worker::Worker(QObject *parent) :
 
 bool Worker::process(const QStringList &args)
 {
-    parser.setApplicationDescription("Modbus Cli");
-    parser.addHelpOption();
-    parser.addOptions(_opt);
+    _parser.setApplicationDescription("Modbus Cli");
+    _parser.addHelpOption();
+    _parser.addOptions(_opt);
 
-    parser.addPositionalArgument("conn", "Connection string. Example: rtu:///dev/ttyS0?baudRate=9600 mtcp://example.com:502");
+    _parser.addPositionalArgument("conn", "Connection string. Example: rtu:///dev/ttyS0?baudRate=9600 mtcp://example.com:502");
 
-    parser.process(args);
+    _parser.process(args);
 
-    if (parser.positionalArguments().empty())
+    if (_parser.positionalArguments().empty())
     {
-        qCritical() << parser.helpText();
+        qCritical() << _parser.helpText();
         return false;
     }
 
@@ -69,7 +69,7 @@ bool Worker::process(const QStringList &args)
         return false;
     }
 
-    _client.reset(new Modbus_Cli::Client{parser.positionalArguments().front(), timeout});
+    _client.reset(new Modbus_Cli::Client{_parser.positionalArguments().front(), timeout});
     QObject::connect(_client.get(), &Modbus_Cli::Client::connected, this, &Worker::on_connected);
     QObject::connect(_client.get(), &Modbus_Cli::Client::finished, this, &Worker::on_request_finished);
 
@@ -111,19 +111,19 @@ void Worker::doit()
     }
     else
     {
-        qCritical() << parser.helpText();
+        qCritical() << _parser.helpText();
         qApp->exit(1);
     }
 }
 
 bool Worker::is_set(int key)
 {
-    return parser.isSet(_opt.at(key));
+    return _parser.isSet(_opt.at(key));
 }
 
 QString Worker::option(int key)
 {
-    return parser.value(_opt.at(key));
+    return _parser.value(_opt.at(key));
 }
 
 QModbusDataUnit::RegisterType Worker::get_type(QString text)

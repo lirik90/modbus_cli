@@ -32,7 +32,7 @@ private:
     int _adr, _start, _count, _repeat, _timeout;
     QModbusDataUnit::RegisterType _type;
 
-    QCommandLineParser parser;
+    QCommandLineParser _parser;
     QList<QCommandLineOption> _opt;
 
     std::unique_ptr<Client> _client;

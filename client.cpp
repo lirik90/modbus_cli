@@ -96,7 +96,10 @@ void Client::error_occurred(QModbusDevice::Error e)
 {
     qCritical().noquote() << "Occurred:" << e << _dev->errorString();
     if (e == QModbusDevice::ConnectionError)
+    {
         _dev->disconnectDevice();
+        emit finished();
+    }
 }
 
 void Client::state_changed(QModbusDevice::State state)
