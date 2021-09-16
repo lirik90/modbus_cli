@@ -10,7 +10,8 @@
 
 namespace Modbus_Cli {
 
-Client::Client(const QString &conn_string, int timeout, int number_of_retries) :
+Client::Client(const QString &conn_string, int timeout, int number_of_retries, bool quiet) :
+	_quiet(quiet),
 	_config(conn_string, timeout, number_of_retries)
 {
     if (_config._tcp._address.isEmpty())
@@ -35,6 +36,7 @@ bool Client::connect_device()
         return true;
     }
 
+	if (!_quiet)
     {
         auto dbg = qInfo().noquote() << "Connecting to modbus device:";
         if (_config._tcp._address.isEmpty())
@@ -71,7 +73,8 @@ void Client::write(int address, QModbusPdu::FunctionCode func, const QByteArray 
 
 void Client::write(int address, QModbusDataUnit::RegisterType type, int start_address, const QVector<quint16> &values)
 {
-    qDebug() << "Write:" << values;
+	if (!_quiet)
+		qDebug() << "Write:" << values;
     QModbusDataUnit data(type, start_address, values);
     QModbusReply* reply = _dev->sendWriteRequest(data, address);
     process_reply(reply);
@@ -79,7 +82,8 @@ void Client::write(int address, QModbusDataUnit::RegisterType type, int start_ad
 
 void Client::readwrite(int address, QModbusDataUnit::RegisterType type, int start_address, int count, const QVector<quint16> &values)
 {
-    qDebug() << "Write:" << values;
+	if (!_quiet)
+		qDebug() << "Write:" << values;
     QModbusDataUnit read_data(type, start_address, count);
     QModbusDataUnit write_data(type, start_address, values);
     QModbusReply* reply = _dev->sendReadWriteRequest(read_data, write_data, address);
@@ -88,13 +92,15 @@ void Client::readwrite(int address, QModbusDataUnit::RegisterType type, int star
 
 void Client::timeout()
 {
-    qCritical() << "Connection timeout";
+	if (!_quiet)
+		qCritical() << "Connection timeout";
     emit finished();
 }
 
 void Client::error_occurred(QModbusDevice::Error e)
 {
-    qCritical().noquote() << "Occurred:" << e << _dev->errorString();
+	if (!_quiet)
+		qCritical().noquote() << "Occurred:" << e << _dev->errorString();
     if (e == QModbusDevice::ConnectionError)
     {
         _dev->disconnectDevice();
@@ -125,7 +131,7 @@ void Client::process_reply(QModbusReply *reply)
         else
             connect(reply, &QModbusReply::finished, this, &Client::reply_finished_slot);
     }
-    else
+	else if (!_quiet)
         qCritical().noquote() << tr("Reply error: ") + _dev->errorString();
 }
 
@@ -133,19 +139,26 @@ void Client::reply_finished(QModbusReply *reply)
 {
     if (reply->error() != QModbusDevice::NoError)
     {
-        qCritical().noquote() << "Reply error:" << reply->error() << reply->errorString()
-                              << (reply->error() == QModbusDevice::ProtocolError ?
+		if (!_quiet)
+			qCritical().noquote() << "Reply error:" << reply->error() << reply->errorString()
+								  << (reply->error() == QModbusDevice::ProtocolError ?
                                       tr("Mobus exception: 0x%1").arg(reply->rawResult().exceptionCode(), -1, 16) :
                                       tr("code: 0x%1").arg(reply->error(), -1, 16));
     }
     else
     {
         const QModbusDataUnit unit = reply->result();
-        for (uint i = 0; i < unit.valueCount(); ++i)
-            qInfo() << (unit.startAddress() + i) << "=" << unit.value(i);
 
-        QModbusResponse response = reply->rawResult();
-        qDebug() << "Raw response:" << response.data().toHex().toUpper();
+		if (unit.valueCount() == 1 && _quiet)
+			qInfo() << unit.value(0);
+		else
+		{
+			for (uint i = 0; i < unit.valueCount(); ++i)
+				qInfo() << (unit.startAddress() + i) << "=" << unit.value(i);
+
+			QModbusResponse response = reply->rawResult();
+			qDebug() << "Raw response:" << response.data().toHex().toUpper();
+		}
     }
 
     reply->deleteLater();

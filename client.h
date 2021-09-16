@@ -14,7 +14,7 @@ class Client : public QObject
 {
     Q_OBJECT
 public:
-	Client(const QString& conn_string, int timeout, int number_of_retries);
+	Client(const QString& conn_string, int timeout, int number_of_retries, bool quiet);
     bool connect_device();
 
     void read(int address, QModbusDataUnit::RegisterType type, int start_address, int count);
@@ -35,6 +35,7 @@ private:
     void process_reply(QModbusReply* reply);
     void reply_finished(QModbusReply* reply);
 
+	bool _quiet;
     Das::Modbus::Config _config;
     std::shared_ptr<QModbusClient> _dev;
 
