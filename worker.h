@@ -29,6 +29,7 @@ private:
     QModbusDataUnit::RegisterType get_type(QString text);
     QVector<quint16> get_values(const QString& text);
 
+    bool _debug = false;
     int _adr, _start, _count, _repeat, _timeout;
     QModbusDataUnit::RegisterType _type;
 

@@ -1,5 +1,6 @@
 
 #include <QDebug>
+#include <QLoggingCategory>
 #include <QCoreApplication>
 
 #include "worker.h"
@@ -14,8 +15,10 @@ enum Option_Type {
     OT_READWRITE,
     OT_START,
     OT_COUNT,
+    OT_DEBUG,
     OT_REPEAT,
     OT_TIMEOUT,
+	OT_NUMBER_OF_RETRIES,
     OT_RAW,
     OT_FUNC,
     OT_FUNC_HEX
@@ -31,8 +34,10 @@ Worker::Worker(QObject *parent) :
         { { "rw", "readwrite" }, QCoreApplication::translate("main", "Write and read device."), "values"},
         { { "s", "start" }, QCoreApplication::translate("main", "Start value address. Default: 0"), "start", "0"},
         { { "c", "count" }, QCoreApplication::translate("main", "Values read count. Default: 1"), "count", "1"},
+        { { "d", "debug" }, QCoreApplication::translate("main", "Verbose mode. Default: 0"), "debug", "0"},
         { "repeat", QCoreApplication::translate("main", "Repeat command. -1 is infinity. Default: 0"), "repeat", "0"},
         { "timeout", QCoreApplication::translate("main", "Modbus response timeout in milliseconds. Default: 1000"), "timeout", "1000"},
+		{ "retries", QCoreApplication::translate("main", "number of retries. Default: 5"), "retries", "5"},
         { "raw", QCoreApplication::translate("main", "Write raw data (hex)"), "raw"},
         { "func", QCoreApplication::translate("main", "Function code for raw request"), "func"},
         { "func_hex", QCoreApplication::translate("main", "Function code for raw request (hex)"), "func_hex"}
@@ -52,15 +57,17 @@ bool Worker::process(const QStringList &args)
 
     if (_parser.positionalArguments().empty())
     {
-        qCritical() << _parser.helpText();
+		qCritical() << _parser.helpText().constData();
         return false;
     }
 
     _adr = option(OT_ADDRESS).toInt();
     _start = option(OT_START).toInt();
     _count = option(OT_COUNT).toInt();
+    _debug = option(OT_DEBUG).toInt();
     _repeat = option(OT_REPEAT).toInt();
     int timeout = option(OT_TIMEOUT).toInt();
+	int number_of_retries = option(OT_NUMBER_OF_RETRIES).toInt();
 
     _type = get_type(option(OT_REGISTER_TYPE));
     if (_type <= QModbusDataUnit::Invalid || _type > QModbusDataUnit::HoldingRegisters)
@@ -69,7 +76,10 @@ bool Worker::process(const QStringList &args)
         return false;
     }
 
-    _client.reset(new Modbus_Cli::Client{_parser.positionalArguments().front(), timeout});
+    if (_debug) // Or use: export QT_LOGGING_RULES="qt.modbus* = true"
+        QLoggingCategory::setFilterRules(QStringLiteral("qt.modbus* = true"));
+
+	_client.reset(new Modbus_Cli::Client{_parser.positionalArguments().front(), timeout, number_of_retries});
     QObject::connect(_client.get(), &Modbus_Cli::Client::connected, this, &Worker::on_connected);
     QObject::connect(_client.get(), &Modbus_Cli::Client::finished, this, &Worker::on_request_finished);
 
@@ -111,7 +121,7 @@ void Worker::doit()
     }
     else
     {
-        qCritical() << _parser.helpText();
+		qCritical() << _parser.helpText().constData();
         qApp->exit(1);
     }
 }

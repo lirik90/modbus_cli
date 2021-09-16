@@ -10,8 +10,8 @@
 
 namespace Modbus_Cli {
 
-Client::Client(const QString &conn_string, int timeout) :
-    _config(conn_string, timeout)
+Client::Client(const QString &conn_string, int timeout, int number_of_retries) :
+	_config(conn_string, timeout, number_of_retries)
 {
     if (_config._tcp._address.isEmpty())
         _dev = std::make_shared<QModbusRtuSerialMaster>();

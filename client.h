@@ -14,7 +14,7 @@ class Client : public QObject
 {
     Q_OBJECT
 public:
-    Client(const QString& conn_string, int timeout);
+	Client(const QString& conn_string, int timeout, int number_of_retries);
     bool connect_device();
 
     void read(int address, QModbusDataUnit::RegisterType type, int start_address, int count);
